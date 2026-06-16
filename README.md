@@ -1,7 +1,7 @@
 # CollectionBuilder-CSV
 
 This is for my preliminary fieldnotes organization
-In Thailand 2025
+In Thailand 2025 & 2026 
 
 Visit the [CollectionBuilder Docs](https://collectionbuilder.github.io/cb-docs/) for step-by-step details for getting started and building collections!
 
