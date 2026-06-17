@@ -2,3 +2,76 @@
     Put your custom SCSS here! 
     This allows you to override any CollectionBuilder or Bootstrap CSS without modifying the base theme files directly.
 */
+
+.calendar-month-title {
+    scroll-margin-top: 5rem;
+}
+
+.calendar-table {
+    table-layout: fixed;
+}
+
+.calendar-table th {
+    text-align: center;
+}
+
+.calendar-day {
+    min-width: 8.5rem;
+    height: 8rem;
+    vertical-align: top;
+}
+
+.calendar-empty {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.calendar-day-number {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.calendar-item {
+    color: inherit;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    margin-bottom: 0.35rem;
+    text-decoration: none;
+}
+
+.calendar-item:hover,
+.calendar-item:focus {
+    text-decoration: underline;
+}
+
+.calendar-thumb,
+.calendar-icon {
+    flex: 0 0 auto;
+    height: 2.25rem;
+    width: 2.25rem;
+}
+
+.calendar-thumb {
+    object-fit: cover;
+}
+
+.calendar-icon {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+}
+
+.calendar-icon .bi {
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .calendar-day {
+        min-width: 7rem;
+        height: auto;
+    }
+
+    .calendar-item {
+        font-size: 0.78rem;
+    }
+}

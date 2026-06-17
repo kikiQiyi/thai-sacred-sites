@@ -9,66 +9,166 @@ custom-foot: js/timeline-js.html
 {% else %}
 {%- assign items = site.data[site.metadata] | where_exp: 'item','item.objectid and item.parentid == nil' -%}
 {% endif %}
-{%- assign items = items | where_exp: 'item','item[field]' | sort: field -%}
-{%- assign raw-dates = items | map: field | compact | uniq -%}
-{%- capture clean-years -%}{% for date in raw-dates %}{% if date contains "-" %}{{ date | strip | split: "-" | first }}{% elsif date contains "/" %}{{ date | strip | split: "/" | last }}{% else %}{{ date | strip }}{% endif %}{% unless forloop.last %};{% endunless %}{%- endfor -%}{%- endcapture -%}
-{%- assign uniqueYears = clean-years | replace: ";;",";" | split: ";" | compact | uniq | sort -%}
-{%- if site.data.theme.year-navigation -%}
-{%- assign navYears = site.data.theme.year-navigation | split: ";" -%}
-{%- elsif site.data.theme.year-nav-increment -%}
-{%- capture navYears -%}
-{%- for i in uniqueYears -%}{%- assign t = i | modulo: site.data.theme.year-nav-increment -%}
-{%- if t == 0 -%}{{ i }}{% unless forloop.last %};{% endunless %}{% endif %}{% endfor %}{%- endcapture -%}
-{%- assign navYears = navYears | split: ";" -%}
-{%- endif -%}
-{%- if navYears.size > 1 -%}
-<div class="dropdown float-end" id="year-nav">
-    <button class="btn btn-primary dropdown-toggle" type="button" id="yearButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Year
+{%- assign items = items | where_exp: 'item','item[field]' -%}
+
+{%- capture month_keys_raw -%}
+{%- for item in items -%}
+    {%- assign date_value = item[field] | strip -%}
+    {%- if date_value contains "/" -%}
+        {%- assign parts = date_value | split: "/" -%}
+        {%- assign month_num = parts[0] | plus: 0 -%}
+        {%- assign year_num = parts[2] | plus: 0 -%}
+        {%- if year_num < 100 -%}{%- assign year_num = year_num | plus: 2000 -%}{%- endif -%}
+    {%- elsif date_value contains "-" -%}
+        {%- assign parts = date_value | split: "-" -%}
+        {%- assign year_num = parts[0] | plus: 0 -%}
+        {%- assign month_num = parts[1] | plus: 0 -%}
+    {%- else -%}
+        {%- assign month_num = 1 -%}
+        {%- assign year_num = date_value | plus: 0 -%}
+    {%- endif -%}
+    {%- if month_num < 10 -%}{%- assign month_key = year_num | append: "-0" | append: month_num -%}{%- else -%}{%- assign month_key = year_num | append: "-" | append: month_num -%}{%- endif -%}
+    {{- month_key -}}{%- unless forloop.last -%};{%- endunless -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- assign month_keys = month_keys_raw | strip | split: ";" | compact | uniq | sort -%}
+
+{%- if month_keys.size > 1 -%}
+<div class="dropdown float-end" id="month-nav">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="monthButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Month
     </button>
-    <div class="dropdown-menu" aria-labelledby="yearButton">
-        {% for y in navYears %}
-        <a class="dropdown-item" href="#y{{ y }}">{{ y }}</a>{% endfor %}
+    <div class="dropdown-menu" aria-labelledby="monthButton">
+        {% for month_key in month_keys %}
+        {%- assign key_parts = month_key | split: "-" -%}
+        {%- assign nav_year = key_parts[0] -%}
+        {%- assign nav_month = key_parts[1] | plus: 0 -%}
+        {%- case nav_month -%}
+            {%- when 1 -%}{%- assign nav_label = "January" -%}
+            {%- when 2 -%}{%- assign nav_label = "February" -%}
+            {%- when 3 -%}{%- assign nav_label = "March" -%}
+            {%- when 4 -%}{%- assign nav_label = "April" -%}
+            {%- when 5 -%}{%- assign nav_label = "May" -%}
+            {%- when 6 -%}{%- assign nav_label = "June" -%}
+            {%- when 7 -%}{%- assign nav_label = "July" -%}
+            {%- when 8 -%}{%- assign nav_label = "August" -%}
+            {%- when 9 -%}{%- assign nav_label = "September" -%}
+            {%- when 10 -%}{%- assign nav_label = "October" -%}
+            {%- when 11 -%}{%- assign nav_label = "November" -%}
+            {%- when 12 -%}{%- assign nav_label = "December" -%}
+        {%- endcase -%}
+        <a class="dropdown-item" href="#m{{ month_key }}">{{ nav_label }} {{ nav_year }}</a>
+        {% endfor %}
     </div>
 </div>
 {%- endif -%}
 
 {{ content }}
 
-<h3><a href="#y{{ uniqueYears | first }}">{{ uniqueYears | first }}</a> to <a href="#y{{ uniqueYears | last }}">{{ uniqueYears | last }}</a></h3>
+<div id="month-calendar-timeline" class="month-calendar-timeline">
+    {% for month_key in month_keys %}
+    {%- assign key_parts = month_key | split: "-" -%}
+    {%- assign year = key_parts[0] | plus: 0 -%}
+    {%- assign month = key_parts[1] | plus: 0 -%}
+    {%- assign month_padded = key_parts[1] -%}
+    {%- case month -%}
+        {%- when 1 -%}{%- assign month_name = "January" -%}{%- assign days_in_month = 31 -%}
+        {%- when 2 -%}{%- assign month_name = "February" -%}{%- assign days_in_month = 28 -%}
+        {%- when 3 -%}{%- assign month_name = "March" -%}{%- assign days_in_month = 31 -%}
+        {%- when 4 -%}{%- assign month_name = "April" -%}{%- assign days_in_month = 30 -%}
+        {%- when 5 -%}{%- assign month_name = "May" -%}{%- assign days_in_month = 31 -%}
+        {%- when 6 -%}{%- assign month_name = "June" -%}{%- assign days_in_month = 30 -%}
+        {%- when 7 -%}{%- assign month_name = "July" -%}{%- assign days_in_month = 31 -%}
+        {%- when 8 -%}{%- assign month_name = "August" -%}{%- assign days_in_month = 31 -%}
+        {%- when 9 -%}{%- assign month_name = "September" -%}{%- assign days_in_month = 30 -%}
+        {%- when 10 -%}{%- assign month_name = "October" -%}{%- assign days_in_month = 31 -%}
+        {%- when 11 -%}{%- assign month_name = "November" -%}{%- assign days_in_month = 30 -%}
+        {%- when 12 -%}{%- assign month_name = "December" -%}{%- assign days_in_month = 31 -%}
+    {%- endcase -%}
+    {%- assign mod400 = year | modulo: 400 -%}
+    {%- assign mod100 = year | modulo: 100 -%}
+    {%- assign mod4 = year | modulo: 4 -%}
+    {%- if month == 2 and mod400 == 0 -%}{%- assign days_in_month = 29 -%}
+    {%- elsif month == 2 and mod100 != 0 and mod4 == 0 -%}{%- assign days_in_month = 29 -%}
+    {%- endif -%}
+    {%- assign first_day = year | append: "-" | append: month_padded | append: "-01" -%}
+    {%- assign first_wday = first_day | date: "%w" | plus: 0 -%}
+    {%- assign cell_count = 0 -%}
 
-<table id="timeline" class="table table-striped">
-    <tbody>
-        {% for year in uniqueYears %}
-        <tr id="y{{ year }}">
-            <th>
-                <h3>{{ year }}</h3>
-            </th>
-            <td>
-                <div class="row">
-                    {%- assign inYear = items | where_exp: 'item', 'item[field] contains year' -%}
-                    {% for item in inYear %}
-                    <div class="col-lg-4 col-md-6">
-                        <a href="{{ '/items/' | relative_url }}{% if item.parentid %}{{ item.parentid }}.html#{{ item.objectid }}{% else %}{{ item.objectid }}.html{% endif %}" >
-                            {% if item.image_thumb %}
-                            <img class="lazyload img-thumbnail timeline-thumb" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3C/svg%3E" data-src="{{ item.image_thumb | relative_url }}" alt="{{ item.image_alt_text | default: item.description | default: item.title | escape }}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ item.title | escape }}">
-                            {% else %}
-                            <div class="card"> 
-                                <div class="card-body text-center">
-                                    <div class="h5 text-dark">{{ item.title }}</div>
-                                    <svg class="bi timeline-thumb text-body" fill="currentColor" aria-hidden="true">
-                                        {%- assign icon_template = item.display_template | default: item.format -%}
-                                        <use href="{{ '/assets/css/cb-icons.svg' | relative_url }}#{% if icon_template contains 'image' %}icon-image{% elsif icon_template contains 'pdf' %}icon-pdf{% elsif icon_template contains 'audio' %}icon-audio{% elsif icon_template contains 'video' %}icon-video{% elsif icon_template contains 'panorama' %}icon-panorama{% elsif icon_template contains 'compound' %}icon-compound-object{% elsif icon_template contains 'multiple' %}icon-multiple{% else %}icon-default{% endif %}"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <section class="calendar-month mb-5" id="m{{ month_key }}">
+        <h3 class="calendar-month-title">{{ month_name }} {{ year }}</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered calendar-table align-top">
+                <thead>
+                    <tr>
+                        <th scope="col">Sun</th>
+                        <th scope="col">Mon</th>
+                        <th scope="col">Tue</th>
+                        <th scope="col">Wed</th>
+                        <th scope="col">Thu</th>
+                        <th scope="col">Fri</th>
+                        <th scope="col">Sat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                    {%- for blank in (1..first_wday) -%}
+                        <td class="calendar-day calendar-empty"></td>
+                        {%- assign cell_count = cell_count | plus: 1 -%}
+                    {%- endfor -%}
+                    {%- for day in (1..days_in_month) -%}
+                        {%- if cell_count == 7 -%}</tr><tr>{%- assign cell_count = 0 -%}{%- endif -%}
+                        {%- if day < 10 -%}{%- assign day_padded = "0" | append: day -%}{%- else -%}{%- assign day_padded = day -%}{%- endif -%}
+                        {%- assign calendar_date = year | append: "-" | append: month_padded | append: "-" | append: day_padded -%}
+                        <td class="calendar-day" id="d{{ calendar_date }}">
+                            <div class="calendar-day-number">{{ day }}</div>
+                            {%- for item in items -%}
+                                {%- assign item_date = item[field] | strip -%}
+                                {%- if item_date contains "/" -%}
+                                    {%- assign item_parts = item_date | split: "/" -%}
+                                    {%- assign item_month = item_parts[0] | plus: 0 -%}
+                                    {%- assign item_day = item_parts[1] | plus: 0 -%}
+                                    {%- assign item_year = item_parts[2] | plus: 0 -%}
+                                    {%- if item_year < 100 -%}{%- assign item_year = item_year | plus: 2000 -%}{%- endif -%}
+                                {%- elsif item_date contains "-" -%}
+                                    {%- assign item_parts = item_date | split: "-" -%}
+                                    {%- assign item_year = item_parts[0] | plus: 0 -%}
+                                    {%- assign item_month = item_parts[1] | plus: 0 -%}
+                                    {%- assign item_day = item_parts[2] | plus: 0 -%}
+                                {%- else -%}
+                                    {%- assign item_year = item_date | plus: 0 -%}
+                                    {%- assign item_month = 1 -%}
+                                    {%- assign item_day = 1 -%}
+                                {%- endif -%}
+                                {%- if item_year == year and item_month == month and item_day == day -%}
+                                    {%- assign item_url_id = item.parentid | default: item.objectid -%}
+                                    <a class="calendar-item d-flex gap-2 align-items-center" href="{{ '/items/' | relative_url }}{{ item_url_id }}.html{% if item.parentid %}#{{ item.objectid }}{% endif %}">
+                                        {%- if item.image_thumb -%}
+                                            {%- assign thumb_src = item.image_thumb -%}
+                                            <img class="calendar-thumb" src="{% if thumb_src contains '://' %}{{ thumb_src }}{% else %}{{ thumb_src | relative_url }}{% endif %}" alt="{{ item.image_alt_text | default: item.description | default: item.title | escape }}">
+                                        {%- else -%}
+                                            <span class="calendar-icon" aria-hidden="true">
+                                                <svg class="bi" fill="currentColor">
+                                                    {%- assign icon_template = item.display_template | default: item.format -%}
+                                                    <use href="{{ '/assets/css/cb-icons.svg' | relative_url }}#{% if icon_template contains 'image' %}icon-image{% elsif icon_template contains 'pdf' %}icon-pdf{% elsif icon_template contains 'audio' %}icon-audio{% elsif icon_template contains 'video' %}icon-video{% elsif icon_template contains 'panorama' %}icon-panorama{% elsif icon_template contains 'compound' %}icon-compound-object{% elsif icon_template contains 'multiple' %}icon-multiple{% else %}icon-default{% endif %}"/>
+                                                </svg>
+                                            </span>
+                                        {%- endif -%}
+                                        <span>{{ item.title }}</span>
+                                    </a>
+                                {%- endif -%}
+                            {%- endfor -%}
+                        </td>
+                        {%- assign cell_count = cell_count | plus: 1 -%}
+                    {%- endfor -%}
+                    {%- if cell_count > 0 -%}
+                        {%- assign blanks_after = 7 | minus: cell_count -%}
+                        {%- for blank in (1..blanks_after) -%}<td class="calendar-day calendar-empty"></td>{%- endfor -%}
+                    {%- endif -%}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endfor %}
+</div>

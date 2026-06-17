@@ -24,7 +24,7 @@ Please feel free to ask questions in the main [CollectionBuilder discussion foru
 
 <https://collectionbuilder.github.io/>
 
-CollectionBuilder is a project of University of Idaho Library's [Digital Initiatives](https://www.lib.uidaho.edu/digital/) and the [Center for Digital Inquiry and Learning](https://cdil.lib.uidaho.edu) (CDIL) following the [Lib-Static](https://lib-static.github.io/) methodology. 
+This project is built with [CollectionBuilder](https://collectionbuilder.github.io/), an open source framework for creating digital collection and exhibit websites.
 Powered by the open source static site generator [Jekyll](https://jekyllrb.com/) and a modern static web stack, it puts collection metadata to work building beautiful sites.
 
 The basic theme is created using [Bootstrap](https://getbootstrap.com/).
